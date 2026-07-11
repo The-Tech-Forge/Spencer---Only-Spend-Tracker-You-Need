@@ -1,17 +1,22 @@
-# spencer
+# Spencer
 
-A new Flutter project.
+**The Only Spend Tracker You Need**
 
-## Getting Started
+Spencer is a beautiful, privacy-first personal finance app built with Flutter. It helps you track your expenses, manage your income, and visualize your spending habits through detailed, interactive analytics.
 
-This project is a starting point for a Flutter application.
+## Features
 
-A few resources to get you started if this is your first Flutter project:
+- **Track Expenses & Income:** Easily log your daily transactions.
+- **Custom Categories:** Create your own categories and personalize them with emojis.
+- **Powerful Analytics:** Gain insights into your spending with detailed weekly and monthly interactive charts.
+- **Privacy First:** All data is stored locally on your device—no cloud syncing, no data tracking.
+- **Backup & Restore:** Securely export your data to a JSON file and restore it whenever needed.
+- **Profile Customization:** Personalize your app experience with a custom name and profile picture.
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Tech Stack
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- **Framework:** [Flutter](https://flutter.dev/) (Material 3)
+- **State Management:** [Riverpod](https://riverpod.dev/)
+- **Local Database:** [Drift (SQLite)](https://drift.simonbinder.eu/)
+- **Routing:** [GoRouter](https://pub.dev/packages/go_router)
+- **Charts:** [FL Chart](https://pub.dev/packages/fl_chart)
