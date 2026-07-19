@@ -6,8 +6,9 @@ import 'package:gap/gap.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:share_plus/share_plus.dart';
 import '../../core/constants/app_constants.dart';
 import '../../provider/backup_provider.dart';
 
@@ -44,27 +45,32 @@ class _BackupRestoreScreenState extends ConsumerState<BackupRestoreScreen> {
   }
 
   Future<void> _handleExport() async {
-    // Let user pick directory
-    String? selectedDir = await FilePicker.platform.getDirectoryPath();
-    if (selectedDir == null) return;
-
     final fileName =
         'spencer_backup_${DateFormat('yyyy-MM-dd').format(DateTime.now())}.json';
-    final fullPath = p.join(selectedDir, fileName);
+
+    final tempDir = await getTemporaryDirectory();
+    final tempPath = p.join(tempDir.path, fileName);
 
     if (!mounted) return;
     final notifier = ref.read(backupProvider.notifier);
-    await notifier.exportBackup(fullPath);
+    await notifier.exportBackup(tempPath);
 
     if (!mounted) return;
     final result = ref.read(backupProvider);
     if (result is AsyncError) {
       _showError(result.error.toString());
-    } else {
+      return;
+    }
+
+    final xFile = XFile(tempPath, mimeType: 'application/json');
+    final shareResult = await Share.shareXFiles([xFile], text: 'Spencer Backup');
+
+    if (shareResult.status == ShareResultStatus.success) {
       await _saveLastBackupDate();
+      if (!mounted) return;
       _showSuccessDialog(
         title: 'Backup Exported!',
-        message: 'Your backup has been saved to:\n\n$fullPath',
+        message: 'Your backup has been exported successfully.',
         icon: '✅',
       );
     }
