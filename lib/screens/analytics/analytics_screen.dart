@@ -9,7 +9,9 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/utils/currency_formatter.dart';
 import '../../core/utils/date_formatter.dart';
 import '../../core/widgets/summary_card.dart';
+import '../../model/category_model.dart';
 import '../../provider/analytics_provider.dart';
+import '../../provider/category_provider.dart';
 
 /// Analytics screen with 8 charts powered by fl_chart.
 class AnalyticsScreen extends ConsumerWidget {
@@ -146,6 +148,11 @@ class AnalyticsScreen extends ConsumerWidget {
           // ── Day-Wise Line Chart ───────────────────────────────────────────
           _SectionHeader('Daily Spend (This Month)'),
           _DayWiseLineChart(),
+          const Gap(24),
+
+          // ── Overall Category Spend (Month) ────────────────────────────────
+          _SectionHeader('Category Monthly Spend'),
+          const _CategoryMonthlySpendSection(),
           const Gap(24),
 
           // ── Category Pie Chart ────────────────────────────────────────────
@@ -1326,6 +1333,126 @@ class _PerDayCategoryChart extends ConsumerWidget {
       loading: () =>
           const _ChartCard(child: Center(child: CircularProgressIndicator())),
       error: (e, _) => _ChartCard(child: Center(child: Text('Error: $e'))),
+    );
+  }
+}
+
+// ─── 9. Category Monthly Spend Section ────────────────────────────────────────
+
+class _CategoryMonthlySpendSection extends ConsumerStatefulWidget {
+  const _CategoryMonthlySpendSection();
+
+  @override
+  ConsumerState<_CategoryMonthlySpendSection> createState() =>
+      _CategoryMonthlySpendSectionState();
+}
+
+class _CategoryMonthlySpendSectionState
+    extends ConsumerState<_CategoryMonthlySpendSection> {
+  CategoryModel? _selectedCategory;
+
+  @override
+  Widget build(BuildContext context) {
+    final categoriesAsync = ref.watch(categoriesProvider);
+    final expensesByCategoryAsync = ref.watch(expensesByCategoryProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return _ChartCard(
+      height: 180,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          categoriesAsync.when(
+            data: (cats) => Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E2230) : const Color(0xFFF5F7FA),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: DropdownButtonHideUnderline(
+                child: DropdownButton<CategoryModel>(
+                  value: _selectedCategory,
+                  hint: Text(
+                    'Select a category',
+                    style: GoogleFonts.outfit(
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  isExpanded: true,
+                  items: cats.map((cat) {
+                    return DropdownMenuItem<CategoryModel>(
+                      value: cat,
+                      child: Row(
+                        children: [
+                          Text(cat.emoji, style: const TextStyle(fontSize: 18)),
+                          const Gap(8),
+                          Text(cat.category, style: GoogleFonts.outfit()),
+                        ],
+                      ),
+                    );
+                  }).toList(),
+                  onChanged: (cat) => setState(() => _selectedCategory = cat),
+                ),
+              ),
+            ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Text('Error loading categories',
+                style: GoogleFonts.outfit(color: Colors.red)),
+          ),
+          const Gap(16),
+          Expanded(
+            child: expensesByCategoryAsync.when(
+              data: (expensesMap) {
+                if (_selectedCategory == null) {
+                  return Center(
+                    child: Text(
+                      'Please select a category to view spend',
+                      style: GoogleFonts.outfit(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontSize: 14,
+                      ),
+                    ),
+                  );
+                }
+                final spend = expensesMap.entries
+                        .where((e) => e.key.id == _selectedCategory!.id)
+                        .map((e) => e.value)
+                        .firstOrNull ??
+                    0.0;
+
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Total Spend',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    const Gap(4),
+                    Text(
+                      CurrencyFormatter.format(spend),
+                      style: GoogleFonts.outfit(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFFF6B6B),
+                      ),
+                    ),
+                  ],
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(
+                child: Text('Error loading data',
+                    style: GoogleFonts.outfit(color: Colors.red)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
